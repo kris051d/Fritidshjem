@@ -24,6 +24,13 @@ public class Main implements java.io.Serializable {
         shoppinglist = dataFilTilArray(file);
 
         printArray(shoppinglist);
+
+
+        float totalPrice[] = totalPrice(shoppinglist);
+
+        System.out.println("Prisen uden rabbat er : " + totalPrice[0] + " og prisen med rabatter er : " + totalPrice[1]);
+
+        printReceipt(shoppinglist);
     }
 
 
@@ -93,5 +100,81 @@ public class Main implements java.io.Serializable {
 
     }
 
+    public static float [] totalPrice(VareData[] array) {
+
+        float totalPriceNoDiscount = 0;
+        float totalPriceDiscount = 0;
+
+        for (VareData items : array) {
+
+            totalPriceNoDiscount += totalItemPrice(items)[0];
+
+            totalPriceDiscount += totalItemPrice(items)[1];
+
+
+        }
+
+        return new float[] {totalPriceNoDiscount, totalPriceDiscount};
+
+    }
+
+
+
+
+    public static float[] totalItemPrice (VareData item) {
+
+        float priceNoDiscount = item.getAntal() * item.getStykPris();
+
+        if (item.getAntal() > 10) {
+            float priceDiscount = (float) ((item.getAntal() * item.getStykPris()) * 0.85);
+
+            return new float[]{priceNoDiscount, priceDiscount};
+        } else {
+            return new float[] {priceNoDiscount, priceNoDiscount};
+        }
+
+    }
+
+    public static void printReceipt (VareData[] items) throws IOException {
+
+        File receipt = new File ("faktura.txt");
+
+        if (receipt.createNewFile()) {
+            System.out.println("File created " + receipt.getName());
+        } else {
+            System.out.println("File already exists");
+        }
+
+        FileWriter fileWriter = new FileWriter(receipt);
+
+        fileWriter.write("Fakta \n");
+        fileWriter.write("\nYou have bought the following items \n");
+
+        for (VareData item : items) {
+
+            fileWriter.write("\n" + item.getAntal() + "\t" + item.getVareNavn() + "\t\t\t\t" + totalItemPrice(item)[0] + " kr,-\n");
+
+            if (totalItemPrice(item)[1] != totalItemPrice(item)[0]) {
+                fileWriter.write("\tDiscount:\t\t\t-" + (totalItemPrice(item)[0] - totalItemPrice(item)[1]) + " kr,-\n");
+                fileWriter.write("Price with added discount: " + totalItemPrice(item)[1] + "\n\n");
+            }
+
+        }
+
+        fileWriter.write("\nYour total price is: " + totalPrice(items)[0] + "\n" );
+        fileWriter.write("\nYour total discount is: " + (totalPrice(items)[0] - totalPrice(items)[1]) + "\n" );
+        fileWriter.write("\nYour total discounted price is: " + totalPrice(items)[1]);
+
+        fileWriter.close();
+
+        BufferedReader in = new BufferedReader(new FileReader("faktura.txt"));
+
+        String line = in.readLine();
+        while (line != null){
+            System.out.println(line);
+            line = in.readLine();
+        }
+        in.close();
+    }
 
 }
